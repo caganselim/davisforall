@@ -13,7 +13,7 @@ class VOSDataset(object):
         """
         Class to read the DAVIS dataset
         :param root: Path to the DAVIS folder that contains JPEGImages, Annotations, etc. folders.
-        :param subset: Set to load the annotations
+        :param subset: Set to load the aönnotations
         :param sequences: Sequences to consider, 'all' to use all the sequences in a set.
         """
 
