@@ -3,38 +3,57 @@ import os
 import sys
 from time import time
 import argparse
-
 import numpy as np
 import pandas as pd
 from davis2017.evaluation import DAVISEvaluation
 
-default_davis_path = '/path/to/the/folder/DAVIS'
+# Default params go here.
+default_dataset_path = f'./datasets/DAVIS'
+default_results_path = f'./results/DAVIS/rvos'
 
 time_start = time()
 parser = argparse.ArgumentParser()
-parser.add_argument('--davis_path', type=str, help='Path to the DAVIS folder containing the JPEGImages, Annotations, '
-                                                   'ImageSets, Annotations_unsupervised folders',
-                    required=False, default=default_davis_path)
-parser.add_argument('--set', type=str, help='Subset to evaluate the results', default='val')
-parser.add_argument('--task', type=str, help='Task to evaluate the results', default='unsupervised',
-                    choices=['semi-supervised', 'unsupervised'])
+
+parser.add_argument('--dataset_root', type=str, help='Path to VOS dataset that contains Annotations, JPEGImages etc.',
+                    required=False, default=default_dataset_path)
+
 parser.add_argument('--results_path', type=str, help='Path to the folder containing the sequences folders',
-                    required=True)
+                    required=False, default=default_results_path)
+
+parser.add_argument('--img_folder', type=str, help='Name of the folder containing the  image sequence folders',
+                    required=False, default='JPEGImages')
+
+parser.add_argument('--mask_folder', type=str, help='Path to the folder containing the mask sequence folders',
+                    required=False, default='Annotations')
+
+parser.add_argument('--imagesets_path', type=str, help='Path to a specific imageset (txt)', default=None)
+
 args, _ = parser.parse_known_args()
-csv_name_global = f'global_results-{args.set}.csv'
-csv_name_per_sequence = f'per-sequence_results-{args.set}.csv'
+
+
+csv_name_global = f'global_results.csv'
+csv_name_per_sequence = f'per-sequence_results.csv'
+
 
 # Check if the method has been evaluated before, if so read the results, otherwise compute the results
 csv_name_global_path = os.path.join(args.results_path, csv_name_global)
 csv_name_per_sequence_path = os.path.join(args.results_path, csv_name_per_sequence)
+
+
+
 if os.path.exists(csv_name_global_path) and os.path.exists(csv_name_per_sequence_path):
     print('Using precomputed results...')
     table_g = pd.read_csv(csv_name_global_path)
     table_seq = pd.read_csv(csv_name_per_sequence_path)
 else:
-    print(f'Evaluating sequences for the {args.task} task...')
+    print(f'Evaluating sequences')
     # Create dataset and evaluate
-    dataset_eval = DAVISEvaluation(davis_root=args.davis_path, task=args.task, gt_set=args.set)
+
+    dataset_eval = DAVISEvaluation(dataset_root=args.dataset_root,
+                                   img_folder=args.img_folder,
+                                   mask_folder=args.mask_folder,
+                                   imagesets_path=args.imagesets_path)
+
     metrics_res = dataset_eval.evaluate(args.results_path)
     J, F = metrics_res['J'], metrics_res['F']
 
@@ -59,10 +78,16 @@ else:
         table_seq.to_csv(f, index=False, float_format="%.3f")
     print(f'Per-sequence results saved in {csv_name_per_sequence_path}')
 
+
+
+
+
+
+
 # Print the results
-sys.stdout.write(f"--------------------------- Global results for {args.set} ---------------------------\n")
+sys.stdout.write(f"--------------------------- Global results ---------------------------\n")
 print(table_g.to_string(index=False))
-sys.stdout.write(f"\n---------- Per sequence results for {args.set} ----------\n")
+sys.stdout.write(f"\n---------- Per sequence results for  ----------\n")
 print(table_seq.to_string(index=False))
 total_time = time() - time_start
 sys.stdout.write('\nTotal time:' + str(total_time))

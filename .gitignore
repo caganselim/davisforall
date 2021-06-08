@@ -113,3 +113,5 @@ docs/site/
 
 # Generated C code
 _mask.c
+/datasets/
+/results/

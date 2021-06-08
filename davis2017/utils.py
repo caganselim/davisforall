@@ -3,8 +3,7 @@ import errno
 import numpy as np
 from PIL import Image
 import warnings
-from davis2017.davis import DAVIS
-
+from davis2017.davis import VOSDataset
 
 def _pascal_color_map(N=256, normalized=False):
     """
@@ -60,7 +59,7 @@ def overlay_semantic_mask(im, ann, alpha=0.5, colors=None, contour_thickness=Non
 
 
 def generate_obj_proposals(davis_root, subset, num_proposals, save_path):
-    dataset = DAVIS(davis_root, subset=subset, codalab=True)
+    dataset = VOSDataset(davis_root, subset=subset, codalab=True)
     for seq in dataset.get_sequences():
         save_dir = os.path.join(save_path, seq)
         if os.path.exists(save_dir):
